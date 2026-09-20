@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+uploads/*.pptx
+static/assets/*
+!static/assets/.gitkeep
