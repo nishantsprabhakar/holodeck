@@ -18,7 +18,7 @@ from fastapi.staticfiles import StaticFiles
 from parser import parse_pptx
 import renderer
 
-from version import __version__
+from version import APP_NAME, __version__
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # The desktop launcher points these elsewhere: the UI ships read-only inside
@@ -34,7 +34,7 @@ RENDER_VERSION = "raster-2"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(ASSETS_ROOT, exist_ok=True)
 
-app = FastAPI(title="Holo-Deck PPTX Converter", version=__version__)
+app = FastAPI(title=APP_NAME, version=__version__)
 last_heartbeat = None  # monotonic time of the last open page's ping; read by the launcher
 
 
@@ -57,9 +57,16 @@ def _deck_json_path(deck_id):
     return os.path.join(ASSETS_ROOT, deck_id, "deck.json")
 
 
+STALL_TIMEOUT = 300  # seconds without progress before a job is declared stuck
+
+
 def _update(job_id, **fields):
     with jobs_lock:
-        jobs[job_id].update(fields)
+        job = jobs[job_id]
+        if job["status"] == "error" and fields.get("status") != "error":
+            return  # already failed by the watchdog; ignore late progress
+        job.update(fields)
+        job["updated"] = time.monotonic()
 
 
 def _convert(job_id, deck_id, upload_path, filename):
@@ -114,6 +121,23 @@ def _worker():
 threading.Thread(target=_worker, daemon=True).start()
 
 
+def _watchdog():
+    # PowerPoint can block automation indefinitely behind a hidden dialog
+    # (e.g. "start in safe mode?" after a crash). Fail the job with
+    # actionable advice instead of leaving the progress bar hanging.
+    while True:
+        time.sleep(15)
+        with jobs_lock:
+            for job in jobs.values():
+                if job["status"] == "running" and time.monotonic() - job.get("updated", time.monotonic()) > STALL_TIMEOUT:
+                    job.update(status="error", error=(
+                        "PowerPoint stopped responding. It may be showing a dialog: open PowerPoint, "
+                        "dismiss any prompts, close it, then restart HoloDeck and try again."))
+
+
+threading.Thread(target=_watchdog, daemon=True).start()
+
+
 @app.post("/api/convert")
 async def api_convert(file: UploadFile = File(...)):
     if not file.filename.lower().endswith(".pptx"):
@@ -141,7 +165,8 @@ async def api_convert(file: UploadFile = File(...)):
             os.remove(upload_path)
             return JSONResponse({"jobId": existing, **{k: v for k, v in jobs[existing].items() if k != "result"}})
         job_id = uuid.uuid4().hex
-        jobs[job_id] = {"status": "queued", "progress": 0.0, "message": "QUEUED FOR RENDER CORE..."}
+        jobs[job_id] = {"status": "queued", "progress": 0.0, "message": "QUEUED FOR RENDER CORE...",
+                        "updated": time.monotonic()}
         jobs_by_deck[deck_id] = job_id
     work_queue.put((job_id, deck_id, upload_path, file.filename))
     return JSONResponse({"jobId": job_id, "status": "queued", "progress": 0.0})
@@ -194,7 +219,7 @@ async def api_export(deck_id: str):
     # Escape "</" so slide text can never terminate the inline <script>.
     deck_js = json.dumps(deck).replace("</", "<\\/")
     page = read("index.html")
-    page = re.sub(r"<title>.*?</title>", lambda m: f"<title>{html.escape(title)} // HOLO-DECK</title>", page, count=1)
+    page = re.sub(r"<title>.*?</title>", lambda m: f"<title>{html.escape(title)} // {APP_NAME}</title>", page, count=1)
     page = page.replace('<link rel="stylesheet" href="style.css" />', f"<style>\n{read('style.css')}\n</style>", 1)
     page = page.replace('<script src="app.js"></script>',
                         f"<script>window.HOLODECK_DECK = {deck_js};</script>\n<script>{read('app.js')}</script>", 1)

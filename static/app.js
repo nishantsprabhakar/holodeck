@@ -942,7 +942,17 @@
     deck = null;
   });
 
+  const termsModal = document.getElementById("terms-modal");
+  const toggleTerms = (show) => termsModal.classList.toggle("hidden", !show);
+  document.querySelectorAll(".terms-link").forEach((b) => b.addEventListener("click", () => toggleTerms(true)));
+  document.getElementById("terms-close").addEventListener("click", () => toggleTerms(false));
+  termsModal.addEventListener("click", (e) => { if (e.target === termsModal) toggleTerms(false); });
+
   document.addEventListener("keydown", (e) => {
+    if (!termsModal.classList.contains("hidden")) {
+      if (e.key === "Escape") toggleTerms(false);
+      return;
+    }
     if (viewer.classList.contains("hidden")) return;
     if (["ArrowRight", " ", "PageDown"].includes(e.key)) { next(); e.preventDefault(); }
     else if (["ArrowLeft", "PageUp"].includes(e.key)) { prev(); e.preventDefault(); }

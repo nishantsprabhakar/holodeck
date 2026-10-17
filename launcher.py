@@ -1,7 +1,8 @@
-"""Desktop entry point: runs the Holo-Deck server on localhost and shows it in
+"""Desktop entry point: runs the Wrexlyn HoloDeck server on localhost and shows it in
 a native window (WebView2 on Windows, WebKit on macOS). Where no native web
 view is available (e.g. Linux), it opens the default browser instead and
 exits once the page has been closed for a while."""
+import faulthandler
 import json
 import os
 import socket
@@ -11,7 +12,8 @@ import time
 import urllib.request
 import webbrowser
 
-APP_NAME = "Holo-Deck"
+from version import APP_NAME
+
 PREFERRED_PORT = 8600
 BROWSER_IDLE_EXIT = 180  # seconds without a page heartbeat before exiting
 
@@ -27,13 +29,13 @@ def data_dir():
         base = os.path.expanduser("~/Library/Application Support")
     else:
         base = os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share")
-    path = os.path.join(base, "HoloDeck")
+    path = os.path.join(base, "WrexlynHoloDeck")
     os.makedirs(path, exist_ok=True)
     return path
 
 
 def existing_instance(port):
-    """True if a Holo-Deck server is already answering on this port."""
+    """True if a HoloDeck server is already answering on this port."""
     try:
         with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/health", timeout=1.5) as r:
             return json.load(r).get("app") == "holodeck"
@@ -81,6 +83,10 @@ def main():
         sys.stdout = sys.stdout or log
         sys.stderr = sys.stderr or log
 
+    if os.environ.get("HOLODECK_DEBUG"):
+        # Periodic all-thread stack dumps to the log, for diagnosing hangs.
+        faulthandler.dump_traceback_later(20, repeat=True, file=sys.stderr)
+
     if existing_instance(PREFERRED_PORT):
         url = f"http://127.0.0.1:{PREFERRED_PORT}/"
         if not show_window(url):
@@ -101,7 +107,7 @@ def main():
     deadline = time.monotonic() + 30
     while not srv.started:
         if not thread.is_alive() or time.monotonic() > deadline:
-            raise SystemExit("Holo-Deck server failed to start")
+            raise SystemExit(f"{APP_NAME} server failed to start")
         time.sleep(0.05)
 
     url = f"http://127.0.0.1:{port}/"

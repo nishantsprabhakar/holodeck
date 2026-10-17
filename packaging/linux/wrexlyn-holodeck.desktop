@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Wrexlyn HoloDeck
+Comment=Convert PowerPoint decks into animated web presentations
+Exec=wrexlyn-holodeck
+Icon=wrexlyn-holodeck
+Terminal=false
+Categories=Office;Presentation;Graphics;

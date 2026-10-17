@@ -1,0 +1,92 @@
+name: Build installers
+
+# Every push to main builds all installers as downloadable workflow
+# artifacts. Pushing a version tag (e.g. v1.0.0) also publishes them as a
+# GitHub Release.
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.optional }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: Windows x64, os: windows-latest, optional: false }
+          - { name: macOS Apple Silicon, os: macos-latest, optional: false }
+          - { name: macOS Intel, os: macos-15-intel, optional: true }
+          - { name: Linux x64, os: ubuntu-22.04, optional: false }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt "pyinstaller>=6.10"
+
+      - name: Build app bundle
+        shell: bash
+        run: pyinstaller --noconfirm packaging/holodeck.spec
+
+      - name: Windows installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup --no-progress -y; $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          $version = python -c "from version import __version__; print(__version__)"
+          & $iscc /Q "/DAppVersion=$version" "/DDistDir=$pwd\dist\WrexlynHoloDeck" "/DOutDir=$pwd\installers" packaging\windows\holodeck.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: macOS disk image
+        if: runner.os == 'macOS'
+        run: bash packaging/macos/build_dmg.sh
+
+      - name: Linux AppImage and .deb
+        if: runner.os == 'Linux'
+        run: bash packaging/linux/build_linux.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ runner.os }}-${{ runner.arch }}
+          path: installers/*
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: installers
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: Wrexlyn HoloDeck ${{ github.ref_name }}
+          files: installers/*
+          body: |
+            Wrexlyn HoloDeck ${{ github.ref_name }}.
+
+            - **Windows**: run `WrexlynHoloDeck-Setup-*.exe`. Exact PowerPoint-identical rendering requires Microsoft PowerPoint to be installed.
+            - **macOS**: open the `.dmg` and drag the app to Applications. The app is not notarized: on first launch, right-click it and choose **Open**.
+            - **Linux**: `sudo apt install ./wrexlyn-holodeck_*.deb`, or `chmod +x` the `.AppImage` and run it. The app opens in your default browser.
+
+            macOS and Linux use the approximate renderer (no PowerPoint automation on those platforms).
+
+            Copyright (c) 2026 Nishant Prabhakar. All rights reserved.
+            Provided "as is", without warranty of any kind; no liability is accepted. See LICENSE.txt.

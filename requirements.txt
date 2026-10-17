@@ -7,3 +7,6 @@ Pillow>=10.0
 # Exact-fidelity rendering drives PowerPoint via COM (Windows + PowerPoint
 # installed). Without it the server falls back to the approximate renderer.
 pywin32>=306; sys_platform == "win32"
+# Native app window for the desktop build (WebView2 / WebKit). Linux builds
+# open the system browser instead.
+pywebview>=5.0; sys_platform == "win32" or sys_platform == "darwin"

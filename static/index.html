@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>HOLO-DECK // Neural Presentation Synthesizer</title>
+<title>Wrexlyn HoloDeck // Neural Presentation Synthesizer</title>
+<meta name="author" content="Nishant Prabhakar" />
+<meta name="copyright" content="© 2026 Nishant Prabhakar. All rights reserved." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -27,7 +29,8 @@
 
     <div class="brand">
       <div class="radar-sweep"></div>
-      <h1 class="glitch-title" data-text="HOLO-DECK">HOLO-DECK</h1>
+      <div class="brand-eyebrow">WREXLYN</div>
+      <h1 class="glitch-title" data-text="HOLODECK">HOLODECK</h1>
       <p class="subtitle">// NEURAL PRESENTATION SYNTHESIZER</p>
     </div>
 
@@ -45,7 +48,7 @@
       <div class="code-sim" aria-hidden="true">
         <div class="code-sim-bar">
           <span class="code-sim-dot"></span><span class="code-sim-dot"></span><span class="code-sim-dot"></span>
-          <span class="code-sim-title">render_core.py — holo-deck</span>
+          <span class="code-sim-title">render_core.py — wrexlyn-holodeck</span>
         </div>
         <div class="code-sim-body" id="code-sim-body"></div>
       </div>
@@ -66,6 +69,11 @@
     </div>
     <p class="footnote" id="render-note">ORIGINAL CONTENT &amp; FORMATTING PRESERVED · NATIVE POWERPOINT RENDER</p>
   </div>
+
+  <footer class="legal-bar">
+    <div class="legal-main">© 2026 NISHANT PRABHAKAR <span class="legal-sep">·</span> WREXLYN HOLODECK <span class="legal-sep">·</span> ALL RIGHTS RESERVED</div>
+    <div class="legal-fine">Provided “as is”, without warranty of any kind, express or implied. To the maximum extent permitted by law, the author accepts no liability for any loss or damage arising from its use or output. Your content remains your responsibility and property. <button type="button" class="terms-link">Terms &amp; Disclaimer</button></div>
+  </footer>
 </section>
 
 <!-- ============ VIEWER ============ -->
@@ -82,7 +90,7 @@
 
   <header class="hud-top">
     <div class="hud-top-left">
-      <span class="hud-logo"><span class="status-dot"></span>HOLO-DECK</span>
+      <span class="hud-logo"><span class="status-dot"></span><span class="hud-logo-wx">WREXLYN</span> HOLODECK</span>
       <span class="hud-sep">/</span>
       <span class="deck-name" id="deck-name">—</span>
     </div>
@@ -102,6 +110,12 @@
     <button class="hud-btn icon-btn" id="new-file-btn" title="Load new file"><span class="btn-ic">+</span>NEW</button>
   </footer>
 
+  <div class="legal-bar viewer-legal">
+    <span class="legal-main">WREXLYN HOLODECK © 2026 NISHANT PRABHAKAR · ALL RIGHTS RESERVED</span>
+    <span class="legal-fine">Player provided “as is” without warranty; no liability accepted for any loss or damage. Presentation content belongs to its respective owners.</span>
+    <button type="button" class="terms-link legal-terms">Terms &amp; Disclaimer</button>
+  </div>
+
   <aside id="minimap" class="minimap hidden">
     <div class="minimap-header">SLIDE MATRIX <button id="minimap-close">✕</button></div>
     <div id="minimap-grid" class="minimap-grid"></div>
@@ -112,6 +126,33 @@
     <div id="notes-body" class="notes-body">No notes for this slide.</div>
   </aside>
 </section>
+
+<div id="terms-modal" class="terms-modal hidden" role="dialog" aria-modal="true" aria-labelledby="terms-title">
+  <div class="terms-panel">
+    <div class="terms-header"><span id="terms-title">TERMS &amp; DISCLAIMER</span> <button type="button" id="terms-close" aria-label="Close">✕</button></div>
+    <div class="terms-body">
+      <p>WREXLYN HOLODECK SOFTWARE LICENSE, DISCLAIMER OF WARRANTY AND LIMITATION OF LIABILITY</p>
+      <p>Copyright (c) 2026 Nishant Prabhakar. All rights reserved.</p>
+      <p>PLEASE READ THESE TERMS CAREFULLY. BY INSTALLING, COPYING, OR USING WREXLYN HOLODECK (THE &quot;SOFTWARE&quot;), YOU AGREE TO BE BOUND BY THESE TERMS. IF YOU DO NOT AGREE, DO NOT INSTALL OR USE THE SOFTWARE.</p>
+      <h3>1. OWNERSHIP</h3>
+      <p>The Software, including its source code, object code, user interface, design, documentation, and the names and marks &quot;Wrexlyn&quot; and &quot;HoloDeck&quot;, is the property of Nishant Prabhakar and is protected by copyright and other intellectual property laws. All rights not expressly granted are reserved.</p>
+      <h3>2. LIMITED PERMISSION TO USE</h3>
+      <p>You may install and use the Software for your own personal or internal business purposes. You may not, without prior written permission from Nishant Prabhakar: sell, rent, lease, sublicense, or redistribute the Software; remove or alter any copyright, trademark, or other notice; or represent the Software as your own work.</p>
+      <h3>3. DISCLAIMER OF WARRANTY</h3>
+      <p>THE SOFTWARE IS PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot;, WITH ALL FAULTS AND WITHOUT WARRANTY OF ANY KIND, WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, NON-INFRINGEMENT, ACCURACY, OR QUIET ENJOYMENT. NISHANT PRABHAKAR DOES NOT WARRANT THAT THE SOFTWARE WILL MEET YOUR REQUIREMENTS, OPERATE WITHOUT INTERRUPTION OR ERROR, BE FREE OF DEFECTS OR HARMFUL COMPONENTS, OR THAT ANY CONVERTED, RENDERED, OR EXPORTED OUTPUT WILL BE ACCURATE, COMPLETE, OR FAITHFUL TO THE SOURCE FILE. YOU ASSUME THE ENTIRE RISK AS TO THE QUALITY, PERFORMANCE, AND RESULTS OF USING THE SOFTWARE.</p>
+      <h3>4. LIMITATION OF LIABILITY</h3>
+      <p>TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL NISHANT PRABHAKAR OR ANY CONTRIBUTOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE, OR CONSEQUENTIAL DAMAGES, OR FOR ANY LOSS OF DATA, PROFITS, REVENUE, BUSINESS, GOODWILL, OR REPUTATION, BUSINESS INTERRUPTION, OR COST OF SUBSTITUTE GOODS OR SERVICES, HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE), ARISING IN ANY WAY OUT OF OR IN CONNECTION WITH THE SOFTWARE OR ITS OUTPUT, OR THE USE OF OR INABILITY TO USE THE SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. WHERE ANY LIABILITY CANNOT BE EXCLUDED BY LAW, IT IS LIMITED TO THE GREATEST EXTENT PERMITTED AND IN ANY EVENT TO THE AMOUNT, IF ANY, THAT YOU PAID FOR THE SOFTWARE.</p>
+      <h3>5. YOUR RESPONSIBILITIES</h3>
+      <p>You are solely responsible for the presentations and other content you open, convert, display, or export with the Software; for ensuring you hold all rights and permissions needed to do so; for reviewing all output before relying on it or sharing it; and for keeping backups of your files. Presentation content remains the property of its respective owners; the copyright notice in the Software applies to the Software, not to your content. Files are processed on your own device; the Software does not send your presentation content to Nishant Prabhakar.</p>
+      <h3>6. INDEMNITY</h3>
+      <p>You agree to indemnify, defend, and hold harmless Nishant Prabhakar from and against any claims, losses, liabilities, damages, costs, and expenses (including reasonable legal fees) arising from your use of the Software, your content, or your breach of these terms.</p>
+      <h3>7. THIRD-PARTY SOFTWARE AND TRADEMARKS</h3>
+      <p>Microsoft, PowerPoint, and Windows are trademarks of Microsoft Corporation. macOS is a trademark of Apple Inc. Linux is a trademark of Linus Torvalds. All other trademarks belong to their respective owners. The Software is not affiliated with, sponsored by, or endorsed by any of them. Where Microsoft PowerPoint is installed, the Software uses it under your own PowerPoint license. The Software includes open-source components (including python-pptx, FastAPI, Starlette, Uvicorn, NumPy, Pillow, pywebview, pythonnet, pywin32, and PyInstaller&#x27;s bootloader), each licensed under its own terms, which are not modified by these terms.</p>
+      <h3>8. GENERAL</h3>
+      <p>If any provision of these terms is held unenforceable, it shall be enforced to the maximum extent permissible and the remaining provisions shall remain in full force and effect. These terms are the entire agreement between you and Nishant Prabhakar regarding the Software.</p>
+    </div>
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>

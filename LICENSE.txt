@@ -1,0 +1,80 @@
+WREXLYN HOLODECK
+SOFTWARE LICENSE, DISCLAIMER OF WARRANTY AND LIMITATION OF LIABILITY
+
+Copyright (c) 2026 Nishant Prabhakar. All rights reserved.
+
+PLEASE READ THESE TERMS CAREFULLY. BY INSTALLING, COPYING, OR USING WREXLYN
+HOLODECK (THE "SOFTWARE"), YOU AGREE TO BE BOUND BY THESE TERMS. IF YOU DO
+NOT AGREE, DO NOT INSTALL OR USE THE SOFTWARE.
+
+1. OWNERSHIP
+The Software, including its source code, object code, user interface,
+design, documentation, and the names and marks "Wrexlyn" and "HoloDeck", is
+the property of Nishant Prabhakar and is protected by copyright and other
+intellectual property laws. All rights not expressly granted are reserved.
+
+2. LIMITED PERMISSION TO USE
+You may install and use the Software for your own personal or internal
+business purposes. You may not, without prior written permission from
+Nishant Prabhakar: sell, rent, lease, sublicense, or redistribute the
+Software; remove or alter any copyright, trademark, or other notice; or
+represent the Software as your own work.
+
+3. DISCLAIMER OF WARRANTY
+THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITH ALL FAULTS AND
+WITHOUT WARRANTY OF ANY KIND, WHETHER EXPRESS, IMPLIED, OR STATUTORY,
+INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF MERCHANTABILITY, FITNESS FOR
+A PARTICULAR PURPOSE, TITLE, NON-INFRINGEMENT, ACCURACY, OR QUIET
+ENJOYMENT. NISHANT PRABHAKAR DOES NOT WARRANT THAT THE SOFTWARE WILL MEET
+YOUR REQUIREMENTS, OPERATE WITHOUT INTERRUPTION OR ERROR, BE FREE OF
+DEFECTS OR HARMFUL COMPONENTS, OR THAT ANY CONVERTED, RENDERED, OR EXPORTED
+OUTPUT WILL BE ACCURATE, COMPLETE, OR FAITHFUL TO THE SOURCE FILE. YOU
+ASSUME THE ENTIRE RISK AS TO THE QUALITY, PERFORMANCE, AND RESULTS OF USING
+THE SOFTWARE.
+
+4. LIMITATION OF LIABILITY
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL
+NISHANT PRABHAKAR OR ANY CONTRIBUTOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE, OR CONSEQUENTIAL DAMAGES, OR FOR
+ANY LOSS OF DATA, PROFITS, REVENUE, BUSINESS, GOODWILL, OR REPUTATION,
+BUSINESS INTERRUPTION, OR COST OF SUBSTITUTE GOODS OR SERVICES, HOWEVER
+CAUSED AND UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE), ARISING IN ANY WAY
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR ITS OUTPUT, OR THE USE OF OR
+INABILITY TO USE THE SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGES. WHERE ANY LIABILITY CANNOT BE EXCLUDED BY LAW, IT IS LIMITED TO
+THE GREATEST EXTENT PERMITTED AND IN ANY EVENT TO THE AMOUNT, IF ANY, THAT
+YOU PAID FOR THE SOFTWARE.
+
+5. YOUR RESPONSIBILITIES
+You are solely responsible for the presentations and other content you
+open, convert, display, or export with the Software; for ensuring you hold
+all rights and permissions needed to do so; for reviewing all output before
+relying on it or sharing it; and for keeping backups of your files.
+Presentation content remains the property of its respective owners; the
+copyright notice in the Software applies to the Software, not to your
+content. Files are processed on your own device; the Software does not send
+your presentation content to Nishant Prabhakar.
+
+6. INDEMNITY
+You agree to indemnify, defend, and hold harmless Nishant Prabhakar from and
+against any claims, losses, liabilities, damages, costs, and expenses
+(including reasonable legal fees) arising from your use of the Software,
+your content, or your breach of these terms.
+
+7. THIRD-PARTY SOFTWARE AND TRADEMARKS
+Microsoft, PowerPoint, and Windows are trademarks of Microsoft Corporation.
+macOS is a trademark of Apple Inc. Linux is a trademark of Linus Torvalds.
+All other trademarks belong to their respective owners. The Software is not
+affiliated with, sponsored by, or endorsed by any of them. Where Microsoft
+PowerPoint is installed, the Software uses it under your own PowerPoint
+license. The Software includes open-source components (including
+python-pptx, FastAPI, Starlette, Uvicorn, NumPy, Pillow, pywebview,
+pythonnet, pywin32, and PyInstaller's bootloader), each licensed under its
+own terms, which are not modified by these terms.
+
+8. GENERAL
+If any provision of these terms is held unenforceable, it shall be enforced
+to the maximum extent permissible and the remaining provisions shall remain
+in full force and effect. These terms are the entire agreement between you
+and Nishant Prabhakar regarding the Software.
