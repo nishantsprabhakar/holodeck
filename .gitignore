@@ -3,3 +3,5 @@ __pycache__/
 uploads/*.pptx
 static/assets/*
 !static/assets/.gitkeep
+build/
+dist/

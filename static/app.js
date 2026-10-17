@@ -94,6 +94,76 @@
     }, 900);
   }
 
+  // ---------------------------------------------------------------
+  // Code terminal: streams render-pipeline "code" while the server works,
+  // interleaved with the job's real progress messages.
+  // ---------------------------------------------------------------
+  const codeSimBody = document.getElementById("code-sim-body");
+  const rnd = (a, b) => Math.floor(a + Math.random() * (b - a + 1));
+  const hex = (n) => Array.from({ length: n }, () => "0123456789abcdef"[rnd(0, 15)]).join("");
+  const pick = (arr) => arr[rnd(0, arr.length - 1)];
+  const CODE_TEMPLATES = [
+    () => "def matte_layer(white, black):",
+    () => "    alpha = 1.0 - (white - black).mean(axis=2) / 255.0",
+    () => "    rgb = black / np.maximum(alpha, 1e-3)[..., None]",
+    () => `for z, shape in enumerate(slide.shapes):  # z-order ${rnd(0, 99)}`,
+    () => `    box = rotate_bounds(shape, theta=${rnd(0, 359)}).pad(${rnd(4, 38)})`,
+    () => `passes = plan_passes(items)  # ${rnd(6, 102)} shapes -> ${rnd(2, 10)} passes`,
+    () => `slide.Export('s${String(rnd(1, 21)).padStart(2, "0")}_w.png', 'PNG', 1920, 1080)`,
+    () => `[OK] layer s${String(rnd(1, 21)).padStart(2, "0")}_z${String(rnd(0, 99)).padStart(3, "0")}.webp  alpha ${(Math.random()).toFixed(3)}  ${rnd(4, 640)} KB`,
+    () => `0x${hex(8)}  ${hex(4)} ${hex(4)} ${hex(4)} ${hex(4)}  ${hex(4)} ${hex(4)}`,
+    () => `assert psnr(composite, truth) > ${(38 + Math.random() * 12).toFixed(1)}  # dB`,
+    () => `shader<${pick(["materialize", "scan_reveal", "glitch_rgb", "depth_blur"])}> compiled in ${rnd(2, 48)}ms`,
+    () => `emit('${pick(["rise", "assemble", "power_on", "grow_up", "stream_rows"])}', layer=${rnd(0, 99)}, delay=${(Math.random() * 1.3).toFixed(2)})`,
+    () => `# --- glyph cache warm: ${rnd(120, 4096)} glyphs, ${rnd(2, 9)} faces ---`,
+    () => `kernel = gaussian(sigma=${(Math.random() * 3).toFixed(2)})  # blur -> focus`,
+    () => `sync(neural_mesh, nodes=${rnd(16, 512)}, latency=${rnd(1, 19)}ms)`,
+    () => `if overflow(text_bounds, crop):  return render_solo(shape)`,
+    () => `import numpy as np; from holo.core import Hologram`,
+    () => `yield Frame(t=${(Math.random() * 10).toFixed(3)}, opacity=${(Math.random()).toFixed(2)})`,
+  ];
+  const CODE_TOKEN = /(#.*$)|('[^']*')|\b(def|for|in|return|import|from|assert|if|yield|not|and|or)\b|(\[OK\])|(\b0x[0-9a-f]+\b|\b\d+(?:\.\d+)?\b)/g;
+  const TOKEN_CLASS = ["cs-com", "cs-str", "cs-kw", "cs-ok", "cs-num"];
+  let codeSimTimer = null;
+
+  function codeSimLine(text, cls) {
+    const line = document.createElement("div");
+    line.className = "cs-line" + (cls ? " " + cls : "");
+    if (cls) {
+      line.textContent = text;
+    } else {
+      let last = 0;
+      text.replace(CODE_TOKEN, (match, ...groups) => {
+        const offset = groups[TOKEN_CLASS.length];
+        if (offset > last) line.appendChild(document.createTextNode(text.slice(last, offset)));
+        const span = document.createElement("span");
+        span.className = TOKEN_CLASS[groups.findIndex((g, i) => i < TOKEN_CLASS.length && g !== undefined)];
+        span.textContent = match;
+        line.appendChild(span);
+        last = offset + match.length;
+        return match;
+      });
+      if (last < text.length) line.appendChild(document.createTextNode(text.slice(last)));
+    }
+    codeSimBody.appendChild(line);
+    while (codeSimBody.children.length > 24) codeSimBody.removeChild(codeSimBody.firstChild);
+  }
+
+  function startCodeSim() {
+    stopCodeSim();
+    codeSimBody.textContent = "";
+    const tick = () => {
+      codeSimLine(pick(CODE_TEMPLATES)());
+      codeSimTimer = setTimeout(tick, rnd(140, 320));
+    };
+    tick();
+  }
+
+  function stopCodeSim() {
+    clearTimeout(codeSimTimer);
+    codeSimTimer = null;
+  }
+
   ["dragenter", "dragover"].forEach((evt) =>
     dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.add("drag-over"); })
   );
@@ -124,41 +194,68 @@
     progressFill.style.width = "4%";
     statusPct.textContent = "0%";
     cycleStatus();
+    startCodeSim();
+    codeSimLine(`» UPLINK OPEN: ${file.name} (${(file.size / 1048576).toFixed(1)} MB)`, "cs-live");
 
     const form = new FormData();
     form.append("file", file);
 
+    // Upload fills the first 10% of the bar; server-side rendering the rest.
+    const setProgress = (frac) => {
+      const pct = Math.max(0, Math.min(100, Math.round(frac * 100)));
+      progressFill.style.width = pct + "%";
+      statusPct.textContent = pct + "%";
+    };
+
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/parse");
+    xhr.open("POST", "/api/convert");
     xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) {
-        const pct = Math.min(95, Math.round((e.loaded / e.total) * 95));
-        progressFill.style.width = pct + "%";
-        statusPct.textContent = pct + "%";
-      }
+      if (e.lengthComputable) setProgress((e.loaded / e.total) * 0.1);
     };
     xhr.onload = () => {
+      let job;
+      try { job = JSON.parse(xhr.responseText); }
+      catch (err) { showError("Malformed response from server."); return; }
+      if (xhr.status < 200 || xhr.status >= 300) { showError(job.detail || "Upload failed."); return; }
       clearInterval(statusTimer);
-      if (xhr.status >= 200 && xhr.status < 300) {
-        progressFill.style.width = "100%";
-        statusPct.textContent = "100%";
-        statusLine.textContent = "SYNTHESIS COMPLETE.";
-        let data;
-        try { data = JSON.parse(xhr.responseText); }
-        catch (err) { showError("Malformed response from server."); return; }
-        setTimeout(() => bootPresentation(data), 400);
-      } else {
-        let msg = "Upload failed.";
-        try { msg = JSON.parse(xhr.responseText).detail || msg; } catch (_) {}
-        showError(msg);
-      }
+      followJob(job, file.name, setProgress);
     };
-    xhr.onerror = () => { clearInterval(statusTimer); showError("Network error while uploading."); };
+    xhr.onerror = () => { showError("Network error while uploading."); };
     xhr.send(form);
+  }
+
+  let lastJobMessage = "";
+
+  function followJob(job, filename, setProgress) {
+    if (job.status === "done") {
+      setProgress(1);
+      statusLine.textContent = "SYNTHESIS COMPLETE.";
+      codeSimLine("» SYNTHESIS COMPLETE — HOLOGRAM ONLINE", "cs-live");
+      job.result.filename = filename;
+      setTimeout(() => { stopCodeSim(); bootPresentation(job.result); }, 700);
+      return;
+    }
+    if (job.status === "error") { showError(job.error || "Conversion failed."); return; }
+    if (job.message) {
+      statusLine.textContent = job.message;
+      if (job.message !== lastJobMessage) codeSimLine("» " + job.message, "cs-live");
+      lastJobMessage = job.message;
+    }
+    setProgress(0.1 + (job.progress || 0) * 0.9);
+    setTimeout(() => {
+      fetch(`/api/jobs/${job.jobId}`)
+        .then((r) => r.json().then((body) => ({ ok: r.ok, body })))
+        .then(({ ok, body }) => {
+          if (!ok) { showError(body.detail || "Lost track of the conversion job."); return; }
+          followJob({ ...body, jobId: job.jobId }, filename, setProgress);
+        })
+        .catch(() => showError("Network error while rendering."));
+    }, 600);
   }
 
   function showError(msg) {
     clearInterval(statusTimer);
+    stopCodeSim();
     statusPanel.classList.add("hidden");
     dropzone.classList.add("hidden");
     errorText.textContent = msg;
@@ -179,6 +276,7 @@
   const deckNameEl = document.getElementById("deck-name");
   const slideCounterEl = document.getElementById("slide-counter");
   const transitionSweep = document.getElementById("transition-sweep");
+  const scanline = document.querySelector(".stage-scanline");
   const progressTrack = document.getElementById("progress-track");
   const minimap = document.getElementById("minimap");
   const minimapGrid = document.getElementById("minimap-grid");
@@ -590,7 +688,46 @@
   // Line charts draw their stroke via the Web Animations API (needs a real
   // path length), not CSS `animation` — so the `.no-anim` stylesheet rule
   // can't cancel it; it's only run below when `animated` is true.
+  // Raster mode: every shape was rendered by PowerPoint itself into a
+  // transparent layer, so stacking them reproduces the slide exactly; the
+  // player only positions and animates them.
+  function layerUrl(name) { return deck.assetBase + name; }
+
+  function renderRasterSlide(container, slideData, animated) {
+    container.innerHTML = "";
+    container.classList.toggle("no-anim", !animated);
+    container.style.background = `#fff url("${layerUrl(slideData.base)}") center / 100% 100% no-repeat`;
+    let step = 0;
+    slideData.layers.forEach((layer) => {
+      const wrap = document.createElement("div");
+      wrap.className = `slide-el rl rl-${layer.kind}`;
+      wrap.style.left = layer.x + "%";
+      wrap.style.top = layer.y + "%";
+      wrap.style.width = layer.w + "%";
+      wrap.style.height = layer.h + "%";
+      // Backdrops fade in immediately; everything else cascades in z-order
+      // (designers build back-to-front, so panels land before their text),
+      // capped so dense slides still finish quickly.
+      const delay = layer.kind === "backdrop" ? 0 : Math.min(0.15 + step++ * 0.06, 1.35);
+      wrap.style.setProperty("--d", delay + "s");
+      const img = document.createElement("img");
+      img.src = layerUrl(layer.src);
+      img.alt = layer.text || "";
+      img.draggable = false;
+      wrap.appendChild(img);
+      container.appendChild(wrap);
+    });
+  }
+
+  function preloadSlide(index) {
+    const s = deck && deck.mode === "raster" && deck.slides[index];
+    if (!s || s._preloaded) return;
+    s._preloaded = true;
+    [s.base, ...s.layers.map((l) => l.src)].forEach((name) => { new Image().src = layerUrl(name); });
+  }
+
   function renderSlideInto(container, slideData, animated) {
+    if (deck.mode === "raster") { renderRasterSlide(container, slideData, animated); return; }
     container.innerHTML = "";
     container.classList.toggle("no-anim", !animated);
     container.style.background = (slideData.background && slideData.background.value) || "#ffffff";
@@ -646,6 +783,9 @@
 
     const commit = () => {
       renderSlideInto(stage, slideData, true);
+      scanline.classList.remove("scan-once");
+      void scanline.offsetWidth;
+      scanline.classList.add("scan-once");
       stage.classList.remove("transitioning-next", "transitioning-prev");
       if (doTransition) {
         stage.classList.add(direction === "next" ? "transitioning-in-next" : "transitioning-in-prev");
@@ -660,6 +800,8 @@
     updateHud();
     updateNotes(slideData);
     updateMinimapActive();
+    preloadSlide(index + 1);
+    preloadSlide(index - 1);
   }
 
   function updateHud() {
@@ -714,28 +856,34 @@
       tile.style.aspectRatio = ar;
       tile.dataset.index = i;
 
-      const inner = document.createElement("div");
-      inner.className = "mini-inner";
-      inner.style.width = MINI_NATIVE_W + "px";
-      inner.style.height = nativeH + "px";
-      inner.style.setProperty("--sw", MINI_NATIVE_W + "px");
-      inner.style.setProperty("--sh", nativeH + "px");
-      renderSlideInto(inner, slideData, false);
-
-      tile.appendChild(inner);
+      if (deck.mode === "raster") {
+        const img = document.createElement("img");
+        img.className = "mini-thumb";
+        img.src = layerUrl(slideData.thumb);
+        img.alt = `Slide ${i + 1}`;
+        img.loading = "lazy";
+        tile.appendChild(img);
+      } else {
+        const inner = document.createElement("div");
+        inner.className = "mini-inner";
+        inner.style.width = MINI_NATIVE_W + "px";
+        inner.style.height = nativeH + "px";
+        inner.style.setProperty("--sw", MINI_NATIVE_W + "px");
+        inner.style.setProperty("--sh", nativeH + "px");
+        renderSlideInto(inner, slideData, false);
+        tile.appendChild(inner);
+        const ro = () => {
+          if (!tile.clientWidth) return;
+          inner.style.transform = `scale(${tile.clientWidth / MINI_NATIVE_W})`;
+        };
+        minimapScaleFns.push(ro);
+        requestAnimationFrame(ro);
+        window.addEventListener("resize", ro);
+      }
       const num = document.createElement("div");
       num.className = "mini-num";
       num.textContent = String(i + 1).padStart(2, "0");
       tile.appendChild(num);
-
-      const ro = () => {
-        if (!tile.clientWidth) return;
-        const scale = tile.clientWidth / MINI_NATIVE_W;
-        inner.style.transform = `scale(${scale})`;
-      };
-      minimapScaleFns.push(ro);
-      requestAnimationFrame(ro);
-      window.addEventListener("resize", ro);
 
       tile.addEventListener("click", () => { goTo(i); toggleMinimap(false); });
       minimapGrid.appendChild(tile);
@@ -774,6 +922,15 @@
     if (!document.fullscreenElement) viewer.requestFullscreen().catch(() => {});
     else document.exitFullscreen();
   });
+  document.getElementById("export-btn").addEventListener("click", () => {
+    if (!deck || !deck.deckId) return;
+    const a = document.createElement("a");
+    a.href = `/api/export/${encodeURIComponent(deck.deckId)}`;
+    a.download = "";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  });
   document.getElementById("new-file-btn").addEventListener("click", () => {
     if (document.fullscreenElement) document.exitFullscreen();
     viewer.classList.add("hidden");
@@ -803,4 +960,26 @@
     if (Math.abs(dx) > 50) { dx < 0 ? next() : prev(); }
     touchStartX = null;
   }, { passive: true });
+
+  // Standalone HTML export: the server inlines the deck (assets as data
+  // URIs) into window.HOLODECK_DECK, so skip the upload screen entirely.
+  if (window.HOLODECK_DECK) {
+    document.body.classList.add("embedded");
+    bootPresentation(window.HOLODECK_DECK);
+  }
+
+  if (!window.HOLODECK_DECK) {
+    // Tell the user which renderer this host has (exact needs PowerPoint).
+    fetch("/api/health").then((r) => r.json()).then((h) => {
+      if (h.renderer !== "powerpoint") {
+        document.getElementById("render-note").textContent =
+          "APPROXIMATE RENDER · INSTALL ON WINDOWS WITH POWERPOINT FOR EXACT FIDELITY";
+      }
+    }).catch(() => {});
+    // The desktop app (browser mode) exits once no open page has pinged it
+    // for a while, so closing the tab also closes the app.
+    const ping = () => fetch("/api/heartbeat", { method: "POST" }).catch(() => {});
+    ping();
+    setInterval(ping, 15000);
+  }
 })();

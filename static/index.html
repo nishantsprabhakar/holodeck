@@ -42,6 +42,13 @@
     </label>
 
     <div id="status-panel" class="status-panel hidden">
+      <div class="code-sim" aria-hidden="true">
+        <div class="code-sim-bar">
+          <span class="code-sim-dot"></span><span class="code-sim-dot"></span><span class="code-sim-dot"></span>
+          <span class="code-sim-title">render_core.py — holo-deck</span>
+        </div>
+        <div class="code-sim-body" id="code-sim-body"></div>
+      </div>
       <div class="status-line" id="status-line">INITIALIZING...</div>
       <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
       <div class="status-pct" id="status-pct">0%</div>
@@ -57,7 +64,7 @@
       <span class="feature-chip">LIVE ANIMATED CHARTS</span>
       <span class="feature-chip">CINEMATIC TRANSITIONS</span>
     </div>
-    <p class="footnote">ORIGINAL CONTENT &amp; FORMATTING PRESERVED · CLIENT-SIDE RENDER PIPELINE</p>
+    <p class="footnote" id="render-note">ORIGINAL CONTENT &amp; FORMATTING PRESERVED · NATIVE POWERPOINT RENDER</p>
   </div>
 </section>
 
@@ -91,6 +98,7 @@
     <button class="hud-btn icon-btn" id="notes-btn" title="Speaker Notes (N)"><span class="btn-ic">▤</span>NOTES</button>
     <button class="hud-btn icon-btn" id="minimap-btn" title="Slide Grid (G)"><span class="btn-ic">▦</span>GRID</button>
     <button class="hud-btn icon-btn square-btn" id="fullscreen-btn" title="Fullscreen (F)">⛶</button>
+    <button class="hud-btn icon-btn" id="export-btn" title="Download as a standalone HTML file"><span class="btn-ic">⇩</span>EXPORT</button>
     <button class="hud-btn icon-btn" id="new-file-btn" title="Load new file"><span class="btn-ic">+</span>NEW</button>
   </footer>
 

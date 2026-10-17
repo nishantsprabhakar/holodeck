@@ -197,6 +197,46 @@ body::after {
 }
 
 .status-panel { margin-top: 28px; text-align: left; }
+
+/* ---- code terminal shown while rendering ---- */
+.code-sim {
+  position: relative; margin-bottom: 16px; border-radius: 6px; overflow: hidden;
+  border: 1px solid rgba(0,240,255,.3); background: rgba(2,6,14,.92);
+  box-shadow: 0 0 24px rgba(0,240,255,.12), inset 0 0 30px rgba(0,240,255,.05);
+}
+.code-sim::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 3px);
+}
+.code-sim-bar {
+  display: flex; align-items: center; gap: 6px; padding: 7px 10px;
+  background: rgba(0,240,255,.06); border-bottom: 1px solid rgba(0,240,255,.18);
+}
+.code-sim-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(0,240,255,.35); }
+.code-sim-dot:nth-child(1) { background: #ff5f6d; }
+.code-sim-dot:nth-child(2) { background: #ffc25c; }
+.code-sim-dot:nth-child(3) { background: #37ffb0; }
+.code-sim-title { margin-left: 8px; font-family: var(--font-mono); font-size: .68rem; color: var(--text-dim); letter-spacing: .06em; }
+.code-sim-body {
+  height: 190px; padding: 10px 12px; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  font-family: var(--font-mono); font-size: .72rem; line-height: 1.5; color: #9fb8d0;
+}
+/* flex-shrink:0 is essential: with overflow:hidden a flex item's min-height
+   drops to 0, so extra lines would squash together instead of scrolling
+   off the top (justify-content:flex-end keeps the newest line at the bottom). */
+.cs-line { flex: 0 0 auto; white-space: pre; overflow: hidden; text-overflow: ellipsis; animation: csType .32s steps(24, end) both; }
+.cs-line:last-child::after { content: '▌'; color: var(--neon-cyan); animation: dotBlink .9s steps(2) infinite; }
+@keyframes csType { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.cs-kw { color: #ff6ad5; }
+.cs-str { color: #ffd479; }
+.cs-num { color: #7ef9ff; }
+.cs-com { color: #5c7a96; font-style: italic; }
+.cs-ok { color: #37ffb0; font-weight: 700; }
+.cs-live { color: #37ffb0; text-shadow: 0 0 8px rgba(55,255,176,.6); font-weight: 700; }
+
+/* standalone HTML export: no server to upload to or export from */
+.embedded #new-file-btn, .embedded #export-btn { display: none; }
 .status-line {
   font-family: var(--font-mono); color: var(--neon-cyan); font-size: .85rem;
   letter-spacing: .05em; margin-bottom: 10px; min-height: 1.2em;
@@ -294,10 +334,16 @@ body::after {
   position: absolute; inset: 0; pointer-events: none; z-index: 40;
   background: linear-gradient(180deg, transparent 0%, rgba(0,240,255,.09) 50%, transparent 100%);
   height: 40%;
-  animation: scan 5s linear infinite;
+  opacity: 0;
   mix-blend-mode: overlay;
 }
-@keyframes scan { 0% { transform: translateY(-100%); } 100% { transform: translateY(250%); } }
+/* one sweep per slide entry — a permanent overlay would tint the content */
+.stage-scanline.scan-once { animation: scan 1.2s ease-out 1; }
+@keyframes scan {
+  0% { transform: translateY(-100%); opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateY(250%); opacity: 0; }
+}
 
 /* slide content elements */
 .slide-el {
@@ -439,6 +485,52 @@ body::after {
   filter: drop-shadow(0 0 3px rgba(0,0,0,.2));
 }
 .chart-marker { stroke: #fff; stroke-width: 2; transform-box: fill-box; transform-origin: center; }
+
+/* ---- raster layers: shapes pre-rendered by PowerPoint, animated here ---- */
+.rl { opacity: 0; animation-fill-mode: forwards; animation-delay: var(--d, 0s); }
+.rl img { user-select: none; pointer-events: none; }
+
+.rl-backdrop { animation: rlFade .55s ease-out forwards; animation-delay: 0s; }
+@keyframes rlFade { from { opacity: 0; } to { opacity: 1; } }
+
+.rl-text { animation: rlRise .6s cubic-bezier(.16,.9,.25,1) forwards; animation-delay: var(--d, 0s); }
+@keyframes rlRise {
+  0% { opacity: 0; transform: translateY(14px); filter: blur(6px); }
+  65% { filter: blur(0); }
+  100% { opacity: 1; transform: none; filter: none; }
+}
+
+.rl-image { overflow: hidden; animation: imageAssemble .75s cubic-bezier(.2,.85,.25,1) forwards; animation-delay: var(--d, 0s); }
+.rl-image::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(0,240,255,.85), transparent);
+  opacity: 0; animation: scanReveal .75s ease-out forwards; animation-delay: var(--d, 0s);
+}
+
+.rl-shape, .rl-group {
+  transform-origin: center;
+  animation: rlPower .55s cubic-bezier(.2,.9,.3,1.15) forwards; animation-delay: var(--d, 0s);
+}
+@keyframes rlPower {
+  0% { opacity: 0; transform: scaleY(.06); filter: brightness(2) drop-shadow(0 0 0 rgba(0,240,255,0)); }
+  55% { opacity: 1; filter: brightness(1.25) drop-shadow(0 0 10px rgba(0,240,255,.65)); }
+  100% { opacity: 1; transform: none; filter: none; }
+}
+
+/* charts rise from the baseline like bars growing; tables stream in row by row */
+.rl-chart { animation: rlGrowUp .9s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: var(--d, 0s); }
+@keyframes rlGrowUp {
+  0% { opacity: 0; clip-path: inset(100% 0 0 0); }
+  15% { opacity: 1; }
+  100% { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+.rl-table { animation: rlRows 1s steps(10, end) forwards; animation-delay: var(--d, 0s); }
+@keyframes rlRows {
+  0% { opacity: 1; clip-path: inset(0 0 100% 0); }
+  100% { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+
+.mini-thumb { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 
 /* static (non-animated) renders, e.g. minimap thumbnails */
 .no-anim, .no-anim * { animation: none !important; opacity: 1 !important; }
